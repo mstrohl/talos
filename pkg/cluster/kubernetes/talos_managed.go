@@ -349,7 +349,15 @@ func upgradeStaticPodPatcher(options UpgradeOptions, service string, configResou
 				config.ClusterConfig.APIServerConfig = &v1alpha1config.APIServerConfig{}
 			}
 
-			image := fmt.Sprintf("%s:v%s", constants.KubernetesAPIServerImage, options.Path.ToVersion())
+			imageName := constants.KubernetesAPIServerImage
+
+			privateRepo := strings.Split(config.ClusterConfig.APIServerConfig.ContainerImage, ":")[0]
+			if privateRepo != constants.KubernetesAPIServerImage {
+				imageName = privateRepo
+			}
+
+			image := fmt.Sprintf("%s:v%s", imageName, options.Path.ToVersion())
+
 
 			if config.ClusterConfig.APIServerConfig.ContainerImage == image || configImage == image {
 				return errUpdateSkipped
@@ -360,23 +368,21 @@ func upgradeStaticPodPatcher(options UpgradeOptions, service string, configResou
 			if options.DryRun {
 				return errUpdateSkipped
 			}
-
-			repoParts := strings.Split(config.ClusterConfig.APIServerConfig.ContainerImage, ":")
-			privateRepo := repoParts[0]
-
-			if privateRepo != constants.KubernetesAPIServerImage {
-				image := fmt.Sprintf("%s:v%s", privateRepo, options.Path.ToVersion())
-				config.ClusterConfig.APIServerConfig.ContainerImage = image
-			} else {
-				config.ClusterConfig.APIServerConfig.ContainerImage = image
-			}
-
+			
+			config.ClusterConfig.APIServerConfig.ContainerImage = image
 		case kubeControllerManager:
 			if config.ClusterConfig.ControllerManagerConfig == nil {
 				config.ClusterConfig.ControllerManagerConfig = &v1alpha1config.ControllerManagerConfig{}
 			}
 
-			image := fmt.Sprintf("%s:v%s", constants.KubernetesControllerManagerImage, options.Path.ToVersion())
+			imageName := constants.KubernetesControllerManagerImage
+
+			privateRepo := strings.Split(config.ClusterConfig.ControllerManagerConfig.ContainerImage, ":")[0]
+			if privateRepo != constants.KubernetesControllerManagerImage {
+				imageName = privateRepo
+			}
+
+			image := fmt.Sprintf("%s:v%s", imageName, options.Path.ToVersion())
 
 			if config.ClusterConfig.ControllerManagerConfig.ContainerImage == image || configImage == image {
 				return errUpdateSkipped
@@ -388,19 +394,17 @@ func upgradeStaticPodPatcher(options UpgradeOptions, service string, configResou
 				return errUpdateSkipped
 			}
 
-			repoParts := strings.Split(config.ClusterConfig.ControllerManagerConfig.ContainerImage, ":")
-			privateRepo := repoParts[0]
-
-			if privateRepo != constants.KubernetesControllerManagerImage {
-				image := fmt.Sprintf("%s:v%s", privateRepo, options.Path.ToVersion())
-				config.ClusterConfig.ControllerManagerConfig.ContainerImage = image
-			} else {
-				config.ClusterConfig.ControllerManagerConfig.ContainerImage = image
-			}
-
+			config.ClusterConfig.ControllerManagerConfig.ContainerImage = image
 		case kubeScheduler:
 			if config.ClusterConfig.SchedulerConfig == nil {
 				config.ClusterConfig.SchedulerConfig = &v1alpha1config.SchedulerConfig{}
+			}
+
+			imageName := constants.KubernetesSchedulerImage
+
+			if config.ClusterConfig.SchedulerConfig.ContainerImage == "" {
+				privateRepo := strings.Split(config.ClusterConfig.SchedulerConfig.ContainerImage, ":")[0]
+				imageName = privateRepo
 			}
 
 			image := fmt.Sprintf("%s:v%s", constants.KubernetesSchedulerImage, options.Path.ToVersion())
@@ -414,16 +418,8 @@ func upgradeStaticPodPatcher(options UpgradeOptions, service string, configResou
 			if options.DryRun {
 				return errUpdateSkipped
 			}
-
-			if config.ClusterConfig.SchedulerConfig.ContainerImage == "" {
-				repoParts := strings.Split(config.ClusterConfig.SchedulerConfig.ContainerImage, ":")
-				privateRepo := repoParts[0]
-				image := fmt.Sprintf("%s:v%s", privateRepo, options.Path.ToVersion())
-				config.ClusterConfig.SchedulerConfig.ContainerImage = image
-			} else {
-				config.ClusterConfig.SchedulerConfig.ContainerImage = image
-			}
-
+			
+			config.ClusterConfig.SchedulerConfig.ContainerImage = image
 		default:
 			return fmt.Errorf("unsupported service %q", service)
 		}
