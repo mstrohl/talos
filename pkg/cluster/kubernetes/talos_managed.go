@@ -361,7 +361,16 @@ func upgradeStaticPodPatcher(options UpgradeOptions, service string, configResou
 				return errUpdateSkipped
 			}
 
-			config.ClusterConfig.APIServerConfig.ContainerImage = image
+			repoParts := strings.Split(config.ClusterConfig.APIServerConfig.ContainerImage, ":")
+			privateRepo := repoParts[0]
+
+			if privateRepo != constants.KubernetesAPIServerImage {
+				image := fmt.Sprintf("%s:v%s", privateRepo, options.Path.ToVersion())
+				config.ClusterConfig.APIServerConfig.ContainerImage = image
+			} else {
+				config.ClusterConfig.APIServerConfig.ContainerImage = image
+			}
+
 		case kubeControllerManager:
 			if config.ClusterConfig.ControllerManagerConfig == nil {
 				config.ClusterConfig.ControllerManagerConfig = &v1alpha1config.ControllerManagerConfig{}
@@ -379,7 +388,16 @@ func upgradeStaticPodPatcher(options UpgradeOptions, service string, configResou
 				return errUpdateSkipped
 			}
 
-			config.ClusterConfig.ControllerManagerConfig.ContainerImage = image
+			repoParts := strings.Split(config.ClusterConfig.ControllerManagerConfig.ContainerImage, ":")
+			privateRepo := repoParts[0]
+
+			if privateRepo != constants.KubernetesControllerManagerImage {
+				image := fmt.Sprintf("%s:v%s", privateRepo, options.Path.ToVersion())
+				config.ClusterConfig.ControllerManagerConfig.ContainerImage = image
+			} else {
+				config.ClusterConfig.ControllerManagerConfig.ContainerImage = image
+			}
+
 		case kubeScheduler:
 			if config.ClusterConfig.SchedulerConfig == nil {
 				config.ClusterConfig.SchedulerConfig = &v1alpha1config.SchedulerConfig{}
@@ -397,7 +415,15 @@ func upgradeStaticPodPatcher(options UpgradeOptions, service string, configResou
 				return errUpdateSkipped
 			}
 
-			config.ClusterConfig.SchedulerConfig.ContainerImage = image
+			if config.ClusterConfig.SchedulerConfig.ContainerImage == "" {
+				repoParts := strings.Split(config.ClusterConfig.SchedulerConfig.ContainerImage, ":")
+				privateRepo := repoParts[0]
+				image := fmt.Sprintf("%s:v%s", privateRepo, options.Path.ToVersion())
+				config.ClusterConfig.SchedulerConfig.ContainerImage = image
+			} else {
+				config.ClusterConfig.SchedulerConfig.ContainerImage = image
+			}
+
 		default:
 			return fmt.Errorf("unsupported service %q", service)
 		}
