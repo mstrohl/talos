@@ -368,7 +368,7 @@ func upgradeStaticPodPatcher(options UpgradeOptions, service string, configResou
 			if options.DryRun {
 				return errUpdateSkipped
 			}
-			
+
 			config.ClusterConfig.APIServerConfig.ContainerImage = image
 		case kubeControllerManager:
 			if config.ClusterConfig.ControllerManagerConfig == nil {
